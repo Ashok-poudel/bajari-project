@@ -42,14 +42,14 @@ position:relative;
 .overlay{
 position:absolute;
 inset:0;
-background:rgba(0,0,0,0.45);
+background:rgba(186, 9, 121, 0);
 }
 .hero-text{
 position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-color:white;
+color:rgb(236, 4, 4);
 text-align:center;
 z-index:2;
 }
@@ -171,4 +171,55 @@ border-radius:10px;
 .quantity button{
 width:35px;
 margin:0 5px;
+}
+.footer {
+  background: #111;
+  color: #fff;
+  padding: 40px 0 0;
+  margin-top: 50px;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  width: 90%;
+  margin: auto;
+}
+
+.footer-section h2,
+.footer-section h3 {
+  margin-bottom: 15px;
+}
+
+.footer-section p {
+  font-size: 14px;
+  color: #ccc;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 10px;
+}
+
+.footer-section ul li a {
+  text-decoration: none;
+  color: #ccc;
+  transition: 0.3s;
+}
+
+.footer-section ul li a:hover {
+  color: orange;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding: 15px;
+  background: #000;
+  margin-top: 30px;
+  font-size: 14px;
 }
