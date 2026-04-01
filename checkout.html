@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+<div class="auth-container checkout-box">
+<img src="photos/logo.png" class="auth-logo">
+<h2>Select Payment Method</h2>
+<button class="pay-btn khalti">Pay with Khalti</button>
+<button class="pay-btn esewa">Pay with eSewa</button>
+<button class="pay-btn card">Pay with Card</button>
+</div>
+<script>
+document.querySelectorAll('.pay-btn').forEach(btn => {
+btn.addEventListener('click', () => {
+alert('Payment Successful!');
+localStorage.removeItem('cart');
+window.location.href = 'thankyou.html';
+});
+});
+</script>
+</body>
+</html>
