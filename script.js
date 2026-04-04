@@ -1,4 +1,4 @@
-
+let products = JSON.parse(localStorage.getItem("products")) || [];
 
 
 // First time default products (only if empty)
