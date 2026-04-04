@@ -5,23 +5,101 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout</title>
 <link rel="stylesheet" href="style.css">
+
+<!-- Khalti SDK -->
+<script src="https://khalti.com/static/khalti-checkout.js"></script>
 </head>
 <body class="auth-page">
+
 <div class="auth-container checkout-box">
-<img src="photos/logo.png" class="auth-logo">
-<h2>Select Payment Method</h2>
-<button class="pay-btn khalti">Pay with Khalti</button>
-<button class="pay-btn esewa">Pay with eSewa</button>
-<button class="pay-btn card">Pay with Card</button>
+  <img src="photos/logo.png" class="auth-logo" alt="Bajari Store Logo">
+  <h2>Select Payment Method</h2>
+  <button class="pay-btn khalti">Pay with Khalti</button>
+  <button class="pay-btn esewa">Pay with eSewa</button>
+  <button class="pay-btn card">Pay with Card</button>
 </div>
+
 <script>
-document.querySelectorAll('.pay-btn').forEach(btn => {
-btn.addEventListener('click', () => {
-alert('Payment Successful!');
-localStorage.removeItem('cart');
-window.location.href = 'thankyou.html';
-});
+document.addEventListener('DOMContentLoaded', () => {
+    // ====== CART TOTAL ======
+    const totalAmount = 100; // replace with dynamic cart total
+    const orderId = 'ORDER' + Date.now(); // unique order ID
+
+    // ====== Khalti Configuration ======
+    var khaltiConfig = {
+        "publicKey": "test_public_key_dc74b1b5a0e64f3bb1c2c3c1b8e89f0a", // replace with your Khalti public key
+        "productIdentity": orderId,
+        "productName": "Bajari Store Products",
+        "productUrl": window.location.href,
+        "paymentPreference": ["KHALTI", "EBANKING","MOBILE_BANKING","CONNECT_IPS","SCT"],
+        "eventHandler": {
+            onSuccess (payload) {
+                // Send token and amount to server for verification
+                fetch('khalti_verify.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `token=${payload.token}&amount=${payload.amount}`
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        localStorage.removeItem('cart'); // clear frontend cart
+                        window.location.href = 'thankyou.html';
+                    } else {
+                        alert('Payment verification failed!');
+                        console.error(data.message);
+                    }
+                })
+                .catch(err => {
+                    alert('Error verifying payment!');
+                    console.error(err);
+                });
+            },
+            onError (error) {
+                alert("Khalti Payment Failed!");
+                console.error(error);
+            },
+            onClose () {
+                console.log("Khalti widget closed");
+            }
+        }
+    };
+
+    var khaltiCheckout = new KhaltiCheckout(khaltiConfig);
+
+    // ====== Khalti Button ======
+    document.querySelector('.khalti').addEventListener('click', () => {
+        khaltiCheckout.show({amount: totalAmount * 100}); // amount in paisa
+    });
+
+    // ====== eSewa Button ======
+    document.querySelector('.esewa').addEventListener('click', () => {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'https://esewa.com.np/epay/main'; // live eSewa payment
+
+        form.innerHTML = `
+            <input value="${totalAmount}" name="tAmt" type="hidden">
+            <input value="${totalAmount}" name="amt" type="hidden">
+            <input value="0" name="txAmt" type="hidden">
+            <input value="0" name="psc" type="hidden">
+            <input value="0" name="pdc" type="hidden">
+            <input value="YOUR_MERCHANT_CODE" name="scd" type="hidden">
+            <input value="${orderId}" name="pid" type="hidden">
+            <input value="http://yourwebsite.com/esewa_success.php" name="su" type="hidden">
+            <input value="http://yourwebsite.com/esewa_fail.php" name="fu" type="hidden">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    });
+
+    // ====== Card Button (Placeholder) ======
+    document.querySelector('.card').addEventListener('click', () => {
+        alert('Card Payment Integration Coming Soon!');
+    });
+
 });
 </script>
+
 </body>
 </html>

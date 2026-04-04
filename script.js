@@ -1,5 +1,5 @@
-// ================= LOAD PRODUCTS =================
-let products = JSON.parse(localStorage.getItem("products")) || [];
+
+
 
 // First time default products (only if empty)
 if(products.length === 0){
