@@ -131,15 +131,23 @@ nav a {
 #alert-box {
   position: fixed;
   top: 20px;
-  right: 20px;
-  background: #f5faf7;
-  color: white;
-  padding: 15px 20px;
+  right: -300px; /* start hidden off-screen */
+  background: #111; /* dark background */
+  color: #fff;      /* white text */
+  padding: 15px 25px;
   border-radius: 10px;
-  display: none;
-  z-index: 999;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  z-index: 9999;
+  transition: right 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
 }
 
+
+#alert-box.show {
+  right: 20px;   /* slide in */
+  opacity: 1;
+}
 .auth-page {
   background: url('photos/bg-image.png') center/cover;
   min-height: 100vh;

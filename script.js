@@ -76,17 +76,18 @@ function addToCart(index){
 }
 
 // ================= ALERT =================
-function showAlert(message){
+// ================= ALERT =================
+function showAlert(message) {
   const alertBox = document.getElementById("alert-box");
+  if (!alertBox) return;
 
-  if(alertBox){
-    alertBox.style.display = "block";
-    alertBox.innerText = message;
+  alertBox.innerText = message;
+  alertBox.classList.add("show");
 
-    setTimeout(()=>{
-      alertBox.style.display = "none";
-    },2000);
-  }
+  // Hide after 2 seconds
+  setTimeout(() => {
+    alertBox.classList.remove("show");
+  }, 2000);
 }
 
 // ================= CART COUNT =================
