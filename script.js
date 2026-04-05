@@ -75,8 +75,10 @@ function addToCart(index){
   updateCartCount();
 }
 
+
 // ================= ALERT =================
-// ================= ALERT =================
+let alertTimeout;
+
 function showAlert(message) {
   const alertBox = document.getElementById("alert-box");
   if (!alertBox) return;
@@ -84,12 +86,12 @@ function showAlert(message) {
   alertBox.innerText = message;
   alertBox.classList.add("show");
 
-  // Hide after 2 seconds
-  setTimeout(() => {
+  if (alertTimeout) clearTimeout(alertTimeout);
+
+  alertTimeout = setTimeout(() => {
     alertBox.classList.remove("show");
   }, 2000);
 }
-
 // ================= CART COUNT =================
 function updateCartCount(){
   let cart = JSON.parse(localStorage.getItem("cart")) || [];

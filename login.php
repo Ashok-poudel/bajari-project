@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->fetch();
         if (password_verify($password, $hashedPassword)) {
             $_SESSION['user_email'] = $email;
-            header("Location: index.php");
+            header("Location: index.html");
             exit();
         } else {
             $error = "Incorrect password";
