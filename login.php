@@ -1,5 +1,5 @@
 <?php
-include 'db.php';
+include 'backend/db.php';
 session_start();
 
 $error = "";
@@ -39,18 +39,16 @@ $conn->close();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="auth-page">
 <div class="auth-container">
-<img src="photos/logo.png" class="auth-logo">
+<img src="assets/images/photos/logo.png" class="auth-logo">
 <h2>Login</h2>
 
-<?php if($error): ?>
-<p id="error"><?php echo $error; ?></p>
-<?php endif; ?>
+<p id="formError" class="form-error"><?php echo $error; ?></p>
 
-<form id="loginForm" method="POST" action="login.php">
+<form id="loginForm" method="POST" action="login.php" novalidate>
 <input type="email" name="email" placeholder="Email" required>
 <input type="password" name="password" placeholder="Password" required>
 <button type="submit">Login</button>

@@ -8,12 +8,12 @@ $userName = $_SESSION['user_name'] ?? null;
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bajari Store</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 <header>
 <div class="logo-area">
-<img src="photos/logo.png" class="logo">
+<img src="assets/images/photos/logo.png" class="logo">
 <h1>BAJARI STORE</h1>
 </div>
 <nav>
@@ -21,7 +21,10 @@ $userName = $_SESSION['user_name'] ?? null;
   <a href="index.php">Home</a>
   <a href="aboutus.html">About Us</a>
   <?php if ($userName): ?>
-    <span class="user-greeting">Hello, <?php echo htmlspecialchars($userName); ?></span>
+    <div class="user-profile">
+      <span class="user-avatar"><?php echo strtoupper(substr(htmlspecialchars($userName), 0, 1)); ?></span>
+      <span class="user-greeting">Hello, <?php echo htmlspecialchars($userName); ?></span>
+    </div>
     <a href="logout.php">Logout</a>
   <?php else: ?>
     <a href="login.php">Login</a>
@@ -36,13 +39,18 @@ $userName = $_SESSION['user_name'] ?? null;
 <section class="hero">
 <div class="overlay"></div>
 <div class="hero-text">
-<h1>Best Products At Best Price</h1>
-<p>Shop your favourite items now</p>
+  <?php if ($userName): ?>
+    <div class="hero-welcome">Welcome back, <?php echo htmlspecialchars($userName); ?>!</div>
+  <?php endif; ?>
+  <div class="typing-wrap">
+    <span id="type-text"></span><span class="cursor">|</span>
+  </div>
+  <p class="hero-subtitle">Shop your favourite items now</p>
 </div>
 </section>
 <section class="products" id="product-container"></section>
 <div id="alert-box"></div>
-<script src="script.js"></script>
+<script src="assets/js/script.js"></script>
 <footer class="footer">
   <div class="footer-container">
 

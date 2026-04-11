@@ -22,15 +22,17 @@ function sendResponse($data) {
 }
 
 if ($action === 'get') {
-    $sql = "SELECT c.product_id, p.name, p.price, p.image, c.quantity FROM carts c JOIN products p ON p.id = c.product_id WHERE $ownerClause";
+    $sql = "SELECT c.product_id, p.name, p.price, p.image, p.stock, c.quantity FROM carts c JOIN products p ON p.id = c.product_id WHERE $ownerClause";
     $result = $conn->query($sql);
     $items = [];
     $total = 0;
     $totalQty = 0;
     while ($row = $result->fetch_assoc()) {
         $row['price'] = floatval($row['price']);
+        $row['stock'] = intval($row['stock']);
         $row['quantity'] = intval($row['quantity']);
         $row['subtotal'] = $row['price'] * $row['quantity'];
+        $row['available'] = $row['stock'] >= $row['quantity'];
         $items[] = $row;
         $total += $row['subtotal'];
         $totalQty += $row['quantity'];
@@ -47,22 +49,33 @@ if ($action === 'add') {
         sendResponse(['success' => false, 'message' => 'Invalid product or quantity']);
     }
 
+    $productStmt = $conn->prepare("SELECT stock FROM products WHERE id = ?");
+    $productStmt->bind_param('i', $product_id);
+    $productStmt->execute();
+    $productStmt->bind_result($stock);
+    if (!$productStmt->fetch()) {
+        $productStmt->close();
+        sendResponse(['success' => false, 'message' => 'Product not found']);
+    }
+    $productStmt->close();
+
+    if (intval($stock) <= 0) {
+        sendResponse(['success' => false, 'message' => 'This product is sold out']);
+    }
+
     $sql = "SELECT quantity FROM carts WHERE product_id = $product_id AND $ownerClause";
     $result = $conn->query($sql);
     if ($result && $result->num_rows > 0) {
         $row = $result->fetch_assoc();
         $newQuantity = intval($row['quantity']) + $quantity;
+        if ($newQuantity > intval($stock)) {
+            sendResponse(['success' => false, 'message' => 'Only ' . intval($stock) . ' items left in stock']);
+        }
         $conn->query("UPDATE carts SET quantity = $newQuantity WHERE product_id = $product_id AND $ownerClause");
     } else {
-        $product_stmt = $conn->prepare("SELECT id FROM products WHERE id = ?");
-        $product_stmt->bind_param('i', $product_id);
-        $product_stmt->execute();
-        $product_stmt->store_result();
-        if ($product_stmt->num_rows === 0) {
-            sendResponse(['success' => false, 'message' => 'Product not found']);
+        if ($quantity > intval($stock)) {
+            sendResponse(['success' => false, 'message' => 'Only ' . intval($stock) . ' items left in stock']);
         }
-        $product_stmt->close();
-
         $session = $conn->real_escape_string($session_id);
         $sql = "INSERT INTO carts (session_id, user_id, product_id, quantity, updated_at) VALUES ('$session', " . ($user_id ? intval($user_id) : 'NULL') . ", $product_id, $quantity, NOW())";
         $conn->query($sql);
@@ -93,9 +106,23 @@ if ($action === 'update') {
         $newQuantity = $currentQuantity + $change;
     }
 
+    $stockStmt = $conn->prepare("SELECT stock FROM products WHERE id = ?");
+    $stockStmt->bind_param('i', $product_id);
+    $stockStmt->execute();
+    $stockStmt->bind_result($stock);
+    if (!$stockStmt->fetch()) {
+        $stockStmt->close();
+        sendResponse(['success' => false, 'message' => 'Product not found']);
+    }
+    $stockStmt->close();
+
     if ($newQuantity <= 0) {
         $conn->query("DELETE FROM carts WHERE product_id = $product_id AND $ownerClause");
         sendResponse(['success' => true, 'message' => 'Item removed']);
+    }
+
+    if ($newQuantity > intval($stock)) {
+        sendResponse(['success' => false, 'message' => 'Only ' . intval($stock) . ' items available']);
     }
 
     $conn->query("UPDATE carts SET quantity = $newQuantity, updated_at = NOW() WHERE product_id = $product_id AND $ownerClause");

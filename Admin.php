@@ -1,6 +1,6 @@
 ﻿<?php
 session_start();
-include 'db.php';
+include 'backend/db.php';
 
 $adminEmail = 'poudelashok77@gmail.com';
 $adminPassword = 'Ashok@123';
@@ -44,12 +44,13 @@ if ($showDashboard) {
             $name = trim($_POST['name'] ?? '');
             $price = floatval($_POST['price'] ?? 0);
             $image = trim($_POST['image'] ?? '');
+            $stock = intval($_POST['stock'] ?? 0);
 
-            if ($name === '' || $price <= 0 || $image === '') {
+            if ($name === '' || $price <= 0 || $image === '' || $stock < 0) {
                 $error = 'Please fill in all fields correctly.';
             } else {
-                $stmt = $conn->prepare('INSERT INTO products (name, price, image) VALUES (?, ?, ?)');
-                $stmt->bind_param('sds', $name, $price, $image);
+                $stmt = $conn->prepare('INSERT INTO products (name, price, image, stock) VALUES (?, ?, ?, ?)');
+                $stmt->bind_param('sdsi', $name, $price, $image, $stock);
                 if ($stmt->execute()) {
                     $message = 'Product added successfully.';
                 } else {
@@ -101,7 +102,7 @@ if ($showDashboard) {
     }
 
     $products = [];
-    $result = $conn->query('SELECT id, name, price, image FROM products ORDER BY id DESC');
+    $result = $conn->query('SELECT id, name, price, image, stock FROM products ORDER BY id DESC');
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $products[] = $row;
@@ -138,7 +139,7 @@ if ($showDashboard) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="assets/css/style.css">
 <style>
 body { background: #f4f5f7; }
 .admin-container { display: flex; gap: 20px; padding: 30px; }
@@ -215,7 +216,7 @@ function validateAdminLogin() {
 <?php else: ?>
 <header style="padding: 20px; background:#111; color:white; display:flex; justify-content:space-between; align-items:center;">
   <div style="display:flex; align-items:center; gap:15px;">
-    <img src="photos/logo.png" alt="Logo" style="height:44px;">
+    <img src="assets/images/photos/logo.png" alt="Logo" style="height:44px;">
     <div>
       <h1 style="margin:0; font-size:24px;">Admin Dashboard</h1>
       <div class="user-status">Logged in as <?php echo htmlspecialchars($_SESSION['admin_email']); ?></div>
@@ -258,7 +259,10 @@ function validateAdminLogin() {
               <img src="<?php echo htmlspecialchars($product['image']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
               <div>
                 <h4><?php echo htmlspecialchars($product['name']); ?></h4>
-                <p>Rs <?php echo htmlspecialchars($product['price']); ?></p>
+                <p>Rs <?php echo htmlspecialchars($product['price']); ?> • Stock: <?php echo intval($product['stock']); ?></p>
+                <?php if (intval($product['stock']) <= 0): ?>
+                  <div style="color:#b91c1c; font-weight:700;">Sold Out</div>
+                <?php endif; ?>
               </div>
             </div>
             <form method="POST" style="margin:0;">
@@ -277,7 +281,8 @@ function validateAdminLogin() {
         <input type="hidden" name="action" value="add_product">
         <input type="text" name="name" id="product-name" placeholder="Product Name" required>
         <input type="number" step="0.01" name="price" id="product-price" placeholder="Price" required>
-        <input type="text" name="image" id="product-image" placeholder="Image path (photos/item.jpg)" required>
+        <input type="text" name="image" id="product-image" placeholder="Image path (assets/images/photos/item.jpg)" required>
+        <input type="number" name="stock" id="product-stock" placeholder="Stock quantity" min="0" value="20" required>
         <button type="submit">Add Product</button>
       </form>
     </div>

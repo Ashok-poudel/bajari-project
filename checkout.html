@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="assets/css/style.css">
 
 <!-- Khalti SDK -->
 <script src="https://khalti.com/static/khalti-checkout.js"></script>
@@ -12,7 +12,7 @@
 <body class="auth-page">
 
 <div class="auth-container checkout-box">
-  <img src="photos/logo.png" class="auth-logo" alt="Bajari Store Logo">
+  <img src="assets/images/photos/logo.png" class="auth-logo" alt="Bajari Store Logo">
   <h2>Select Payment Method</h2>
   <p class="checkout-total">Total: Rs <span id="total-amount">0</span></p>
   <button class="pay-btn khalti">Pay with Khalti</button>
@@ -20,10 +20,10 @@
   <button class="pay-btn card">Pay with Card</button>
 </div>
 
-<script src="script.js"></script>
+<script src="assets/js/script.js"></script>
 <script>
 async function placeOrder() {
-    const response = await fetch('place_order.php', {
+    const response = await fetch('backend/place_order.php', {
         method: 'POST'
     });
     const result = await response.json();
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         "paymentPreference": ["KHALTI", "EBANKING","MOBILE_BANKING","CONNECT_IPS","SCT"],
         "eventHandler": {
             onSuccess(payload) {
-                fetch('khalti_verify.php', {
+                fetch('backend/khalti_verify.php', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: `token=${payload.token}&amount=${payload.amount}`
