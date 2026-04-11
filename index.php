@@ -46,9 +46,36 @@ $userName = $_SESSION['user_name'] ?? null;
     <span id="type-text"></span><span class="cursor">|</span>
   </div>
   <p class="hero-subtitle">Shop your favourite items now</p>
+  <a href="#product-container" class="cta-btn">Browse Latest Deals</a>
 </div>
 </section>
-<section class="products" id="product-container"></section>
+<section class="features">
+  <div class="section-header">
+    <h2>Why Bajari Store?</h2>
+    <p>Trusted shopping with fast delivery, real stock, and secure checkout.</p>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>Trusted Quality</h3>
+      <p>Handpicked products with real stock updates and transparent pricing.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Fast Delivery</h3>
+      <p>Reliable shipping across Nepal so your order reaches you quickly.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Secure Payments</h3>
+      <p>Checkout safely with Khalti, eSewa, or card integration.</p>
+    </div>
+  </div>
+</section>
+<section class="products">
+  <div class="products-header">
+    <h2>Latest Deals</h2>
+    <p>Explore in-stock items, limited offers, and top-selling products.</p>
+  </div>
+  <div id="product-container" class="product-grid"></div>
+</section>
 <div id="alert-box"></div>
 <script src="assets/js/script.js"></script>
 <footer class="footer">

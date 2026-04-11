@@ -29,18 +29,22 @@ function showAlert(message) {
 
 function normalizeImagePath(path) {
   if (!path) return path;
-  if (path.startsWith('assets/')) return path;
+  if (path.startsWith('assets/') || path.startsWith('photos/')) return path;
   if (path.startsWith('/assets/')) return path.substring(1);
-  if (path.startsWith('photos/')) return 'assets/images/' + path;
   return path;
 }
 
 async function loadProducts() {
   const data = await fetchJson('backend/products.php');
+  console.log('Products API response', data);
   if (data.success) {
-    products = data.products;
+    products = Array.isArray(data.products) ? data.products : [];
     displayProducts();
   } else {
+    console.error('Product load failed:', data.message, data);
+    if (productContainer) {
+      productContainer.innerHTML = `<div class="product-message">${data.message || 'Unable to load products from the database.'}</div>`;
+    }
     showAlert(data.message || 'Unable to load products');
   }
 }
@@ -48,6 +52,10 @@ async function loadProducts() {
 function displayProducts() {
   if (!productContainer) return;
   productContainer.innerHTML = '';
+  if (products.length === 0) {
+    productContainer.innerHTML = `<div class="product-message">No products found. Please check your database import or refresh the page.</div>`;
+    return;
+  }
   products.forEach(product => {
     const soldOut = product.is_sold_out || product.stock <= 0;
     productContainer.innerHTML += `
@@ -112,16 +120,18 @@ async function loadCart() {
   }
 
   data.items.forEach(item => {
+    const soldOut = !item.available || item.stock <= 0;
     cartItemsContainer.innerHTML += `
       <div class="cart-item">
         <img src="${normalizeImagePath(item.image)}" alt="${item.name}">
         <div class="cart-item-details">
           <h3>${item.name}</h3>
           <div class="cart-item-price">Rs ${item.price}</div>
+          <div class="stock-label">${soldOut ? 'Sold Out' : 'Stock: ' + item.stock}</div>
           <div class="quantity-controls">
             <button onclick="changeQty(${item.product_id}, -1)">-</button>
             <span>${item.quantity}</span>
-            <button onclick="changeQty(${item.product_id}, 1)">+</button>
+            <button ${soldOut ? 'disabled' : ''} onclick="changeQty(${item.product_id}, 1)">+</button>
           </div>
           <button class="remove-btn" onclick="removeItem(${item.product_id})">Remove</button>
         </div>
