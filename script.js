@@ -1,208 +1,192 @@
-let products = JSON.parse(localStorage.getItem("products")) || [];
+const productContainer = document.getElementById("product-container");
+const cartCountElement = document.getElementById("cart-count");
+const cartItemsContainer = document.getElementById("cart-items");
+const totalElement = document.getElementById("total");
+const alertBox = document.getElementById("alert-box");
+let products = [];
 
-
-// First time default products (only if empty)
-if(products.length === 0){
-  products = [
-    {name:"A4 Paper", price:200, image:"photos/A4paper.png"},
-    {name:"Bed", price:12000, image:"photos/bed.jpg"},
-    {name:"Bodycon Dress", price:1800, image:"photos/bodycon.jpg"},
-    {name:"Book Rack", price:4000, image:"photos/book rack.jpg"},
-    {name:"Book", price:500, image:"photos/book.jpg"},
-    {name:"Coat", price:3500, image:"photos/coat.jpg"},
-    {name:"Copy", price:100, image:"photos/copy.jpg"},
-    {name:"Daraz Product", price:9999, image:"photos/daraz.jpg"},
-    {name:"Daura Suruwal", price:2500, image:"photos/daurasurwal.jpg"},
-    {name:"Formal Pant", price:1500, image:"photos/formalpant.jpg"},
-    {name:"Harpic", price:300, image:"photos/harpic.jpg"},
-    {name:"iPhone", price:95000, image:"photos/iphone.jpg"},
-    {name:"Iron", price:2500, image:"photos/iron.jpg"},
-    {name:"Karua", price:800, image:"photos/karuwa.jpg"},
-    {name:"Kitchen Rack", price:6000, image:"photos/kitchen-Rack.jpg"},
-    {name:"Laptop", price:85000, image:"photos/laptop.jpg"},
-    {name:"Macbook", price:125000, image:"photos/macbook.jpg"},
-    {name:"Mouse", price:900, image:"photos/mouse.jpg"},
-    {name:"Pants", price:1200, image:"photos/pants.jpg"},
-    {name:"Party Dress", price:3000, image:"photos/partydress.jpg"},
-    {name:"Pen", price:40, image:"photos/pen.jpg"},
-    {name:"Rabbit Toy", price:1200, image:"photos/rabbit.jpg"},
-    {name:"Samsung Phone", price:70000, image:"photos/samsung.jpg"},
-    {name:"Soap", price:120, image:"photos/soap.jpg"},
-    {name:"Stainless Steel", price:2000, image:"photos/stainless steel.webp"},
-    {name:"Tide", price:500, image:"photos/tide.jpg"},
-    {name:"T-Shirt", price:700, image:"photos/tshirt.jpg"},
-    {name:"Wooden Spoon", price:250, image:"photos/wooden-spoon.jpg"}
-  ];
-
-  localStorage.setItem("products", JSON.stringify(products));
+async function fetchJson(url, options = {}) {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      return { success: false, message: 'Network error' };
+    }
+    return await response.json();
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
 }
 
-// ================= DISPLAY PRODUCTS =================
-const productContainer = document.getElementById("product-container");
+function showAlert(message) {
+  if (!alertBox) {
+    alert(message);
+    return;
+  }
+  alertBox.innerText = message;
+  alertBox.classList.add("show");
+  setTimeout(() => alertBox.classList.remove("show"), 2000);
+}
 
-if(productContainer){
-  productContainer.innerHTML = "";
+async function loadProducts() {
+  const data = await fetchJson('products.php');
+  if (data.success) {
+    products = data.products;
+    displayProducts();
+  } else {
+    showAlert(data.message || 'Unable to load products');
+  }
+}
 
-  products.forEach((product,index)=>{
+function displayProducts() {
+  if (!productContainer) return;
+  productContainer.innerHTML = '';
+  products.forEach(product => {
     productContainer.innerHTML += `
       <div class="product-card">
         <img src="${product.image}" alt="${product.name}">
         <div class="product-info">
           <h3>${product.name}</h3>
           <div class="price">Rs ${product.price}</div>
-          <button onclick="addToCart(${index})">Add To Cart</button>
+          <button onclick="addToCart(${product.id})">Add To Cart</button>
         </div>
       </div>
     `;
   });
 }
 
-// ================= ADD TO CART =================
-function addToCart(index){
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-  const existingIndex = cart.findIndex(item => item.name === products[index].name);
-
-  if(existingIndex !== -1){
-    cart[existingIndex].quantity += 1;
+async function addToCart(productId) {
+  const data = await fetchJson('cart_api.php?action=add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ product_id: productId, quantity: 1 })
+  });
+  if (data.success) {
+    showAlert('Item added to cart');
+    updateCartCount();
   } else {
-    cart.push({...products[index], quantity:1});
+    showAlert(data.message || 'Could not add item');
+  }
+}
+
+async function updateCartCount() {
+  if (!cartCountElement) return;
+  const data = await fetchJson('cart_api.php?action=get');
+  if (data.success) {
+    cartCountElement.innerText = data.totalQty;
+  }
+}
+
+async function loadCart() {
+  if (!cartItemsContainer) return;
+  const data = await fetchJson('cart_api.php?action=get');
+  if (!data.success) {
+    showAlert(data.message || 'Could not load cart');
+    return;
   }
 
-  localStorage.setItem("cart", JSON.stringify(cart));
+  cartItemsContainer.innerHTML = '';
+  if (data.items.length === 0) {
+    cartItemsContainer.innerHTML = `
+      <div class="empty-cart">
+        <div class="empty-cart-icon">🛒</div>
+        <div class="empty-cart-message">Your cart is empty</div>
+        <a href="index.php" class="shop-now-btn">Shop Now</a>
+      </div>
+    `;
+  }
 
-  showAlert("Item added to cart successfully");
-  updateCartCount();
-}
-
-
-// ================= ALERT =================
-let alertTimeout;
-
-function showAlert(message) {
-  const alertBox = document.getElementById("alert-box");
-  if (!alertBox) return;
-
-  alertBox.innerText = message;
-  alertBox.classList.add("show");
-
-  if (alertTimeout) clearTimeout(alertTimeout);
-
-  alertTimeout = setTimeout(() => {
-    alertBox.classList.remove("show");
-  }, 2000);
-}
-// ================= CART COUNT =================
-function updateCartCount(){
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let totalQty = 0;
-
-  cart.forEach(item => totalQty += item.quantity);
-
-  const count = document.getElementById("cart-count");
-  if(count) count.innerText = totalQty;
-}
-
-updateCartCount();
-
-// ================= DISPLAY CART =================
-function displayCart(){
-  const cartItems = document.getElementById("cart-items");
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let total = 0;
-
-  if(cartItems){
-    cartItems.innerHTML = "";
-
-    if(cart.length === 0){
-      cartItems.innerHTML = "<p>Your cart is empty</p>";
-    }
-
-    cart.forEach((item,index)=>{
-      total += item.price * item.quantity;
-
-      cartItems.innerHTML += `
-        <div class="cart-item">
-          <img src="${item.image}">
-          <div>
-            <h3>${item.name}</h3>
-            <p>Rs ${item.price}</p>
-
-            <div class="quantity">
-              <button onclick="changeQty(${index},-1)">-</button>
-              <span>${item.quantity}</span>
-              <button onclick="changeQty(${index},1)">+</button>
-            </div>
-
-            <button onclick="removeItem(${index})" class="remove-btn">Remove</button>
+  data.items.forEach(item => {
+    cartItemsContainer.innerHTML += `
+      <div class="cart-item">
+        <img src="${item.image}" alt="${item.name}">
+        <div class="cart-item-details">
+          <h3>${item.name}</h3>
+          <div class="cart-item-price">Rs ${item.price}</div>
+          <div class="quantity-controls">
+            <button onclick="changeQty(${item.product_id}, -1)">-</button>
+            <span>${item.quantity}</span>
+            <button onclick="changeQty(${item.product_id}, 1)">+</button>
           </div>
+          <button class="remove-btn" onclick="removeItem(${item.product_id})">Remove</button>
         </div>
-      `;
-    });
-
-    const totalElement = document.getElementById("total");
-    if(totalElement) totalElement.innerText = total;
-  }
-}
-
-// ================= CHANGE QUANTITY =================
-function changeQty(index, change){
-  let cart = JSON.parse(localStorage.getItem("cart"));
-
-  cart[index].quantity += change;
-
-  if(cart[index].quantity <= 0){
-    cart.splice(index,1);
-  }
-
-  localStorage.setItem("cart", JSON.stringify(cart));
-
-  updateCartCount();
-  displayCart();
-}
-
-// ================= REMOVE ITEM =================
-function removeItem(index){
-  let cart = JSON.parse(localStorage.getItem("cart"));
-
-  cart.splice(index,1);
-
-  localStorage.setItem("cart", JSON.stringify(cart));
-
-  updateCartCount();
-  displayCart();
-}
-
-// ================= SAVE ORDER (IMPORTANT) =================
-function saveOrder(){
-  let orders = JSON.parse(localStorage.getItem("orders")) || [];
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-  if(cart.length === 0) return;
-
-  orders.push({
-    items: cart,
-    date: new Date().toLocaleString()
+      </div>
+    `;
   });
 
-  localStorage.setItem("orders", JSON.stringify(orders));
-  localStorage.removeItem("cart");
+  if (totalElement) {
+    totalElement.innerText = data.total;
+  }
 }
 
-// ================= LOAD CART =================
-displayCart();
+async function changeQty(productId, change) {
+  const data = await fetchJson('cart_api.php?action=update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ product_id: productId, change })
+  });
+  if (data.success) {
+    loadCart();
+    updateCartCount();
+  } else {
+    showAlert(data.message || 'Could not update cart');
+  }
+}
 
-function searchProduct(){
-  const input = document.getElementById("search").value.toLowerCase();
-  const productCards = document.querySelectorAll(".product-card");
+async function removeItem(productId) {
+  const data = await fetchJson('cart_api.php?action=remove', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ product_id: productId })
+  });
+  if (data.success) {
+    loadCart();
+    updateCartCount();
+  } else {
+    showAlert(data.message || 'Could not remove item');
+  }
+}
 
+async function proceedToCheckout() {
+  const data = await fetchJson('cart_api.php?action=get');
+  if (!data.success) {
+    showAlert(data.message || 'Could not check cart');
+    return;
+  }
+  if (data.totalQty === 0) {
+    showAlert('Your cart is empty!');
+    return;
+  }
+  window.location.href = 'checkout.html';
+}
+
+async function loadCheckoutTotal() {
+  const amountElement = document.getElementById('total-amount');
+  if (!amountElement) return;
+  const data = await fetchJson('cart_api.php?action=get');
+  if (data.success) {
+    amountElement.innerText = data.total;
+  }
+}
+
+if (productContainer) {
+  loadProducts();
+  updateCartCount();
+}
+if (cartItemsContainer) {
+  loadCart();
+  updateCartCount();
+}
+if (document.getElementById('total-amount')) {
+  loadCheckoutTotal();
+}
+
+function searchProduct() {
+  const input = document.getElementById('search');
+  if (!input) return;
+  const term = input.value.toLowerCase();
+  const productCards = document.querySelectorAll('.product-card');
   productCards.forEach(card => {
-    const name = card.querySelector("h3").innerText.toLowerCase();
-
-    if(name.includes(input)){
-      card.style.display = "block";
-    } else {
-      card.style.display = "none";
-    }
+    const name = card.querySelector('h3')?.innerText.toLowerCase() || '';
+    card.style.display = name.includes(term) ? 'block' : 'none';
   });
 }

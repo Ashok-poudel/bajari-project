@@ -13,7 +13,7 @@
     <h1>My Shop</h1>
   </div>
   <nav>
-    <a href="index.html">Home</a>
+    <a href="index.php">Home</a>
     <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
   </nav>
 </header>
@@ -29,107 +29,6 @@
 </div>
 
 <div id="alert-box"></div>
-
-<script>
-// ========== Display Cart ==========
-function displayCart(){
-  const cartItems = document.getElementById("cart-items");
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let total = 0;
-
-  if(cartItems){
-    cartItems.innerHTML = "";
-
-    if(cart.length === 0){
-      cartItems.innerHTML = `
-        <div class="empty-cart">
-          <div class="empty-cart-icon">🛒</div>
-          <div class="empty-cart-message">Your cart is empty</div>
-          <a href="index.html" class="shop-now-btn">Shop Now</a>
-        </div>
-      `;
-    }
-
-    cart.forEach((item,index)=>{
-      total += item.price * item.quantity;
-
-      cartItems.innerHTML += `
-        <div class="cart-item">
-          <img src="${item.image}" alt="${item.name}">
-          <div class="cart-item-details">
-            <h3>${item.name}</h3>
-            <div class="cart-item-price">Rs ${item.price}</div>
-            <div class="quantity-controls">
-              <button onclick="changeQty(${index}, -1)">-</button>
-              <span>${item.quantity}</span>
-              <button onclick="changeQty(${index}, 1)">+</button>
-            </div>
-            <button class="remove-btn" onclick="removeItem(${index})">Remove</button>
-          </div>
-        </div>
-      `;
-    });
-
-    document.getElementById("total").innerText = total;
-  }
-}
-
-// ========== Update Cart Count ==========
-function updateCartCount(){
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  let totalQty = cart.reduce((sum,item)=> sum+item.quantity, 0);
-  const count = document.getElementById("cart-count");
-  if(count) count.innerText = totalQty;
-}
-
-// ========== Add Alert ==========
-function showAlert(message){
-  const alertBox = document.getElementById("alert-box");
-  if(alertBox){
-    alertBox.style.display = "block";
-    alertBox.innerText = message;
-    setTimeout(()=> alertBox.style.display="none", 2000);
-  }
-}
-
-// ========== Change Quantity ==========
-function changeQty(index, change){
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  cart[index].quantity += change;
-  if(cart[index].quantity <= 0) cart.splice(index,1);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  updateCartCount();
-  displayCart();
-}
-
-// ========== Remove Item ==========
-function removeItem(index){
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  cart.splice(index,1);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  updateCartCount();
-  displayCart();
-}
-
-// ========== Proceed to Checkout ==========
-function proceedToCheckout(){
-  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-  if(cart.length === 0){
-    showAlert("Your cart is empty!");
-    return;
-  }
-
-  // Save cart for checkout page
-  localStorage.setItem("checkoutCart", JSON.stringify(cart));
-
-  // Redirect to checkout.html
-  window.location.href = "checkout.html";
-}
-
-// ========== Initialize ==========
-displayCart();
-updateCartCount();
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
