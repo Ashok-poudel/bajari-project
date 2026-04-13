@@ -43,22 +43,55 @@ if ($showDashboard) {
         if ($_POST['action'] === 'add_product') {
             $name = trim($_POST['name'] ?? '');
             $price = floatval($_POST['price'] ?? 0);
-            $image = trim($_POST['image'] ?? '');
             $stock = intval($_POST['stock'] ?? 0);
+            $imagePath = '';
 
-            if ($name === '' || $price <= 0 || $image === '' || $stock < 0) {
-                $error = 'Please fill in all fields correctly.';
+            if (!isset($_FILES['image_file']) || $_FILES['image_file']['error'] !== UPLOAD_ERR_OK) {
+                $error = 'Please select an image file to upload.';
             } else {
+                $allowedTypes = [
+                    'image/jpeg' => '.jpg',
+                    'image/png' => '.png',
+                    'image/gif' => '.gif',
+                    'image/webp' => '.webp'
+                ];
+                $fileInfo = new finfo(FILEINFO_MIME_TYPE);
+                $fileType = $fileInfo->file($_FILES['image_file']['tmp_name']);
+
+                if (!array_key_exists($fileType, $allowedTypes)) {
+                    $error = 'Only JPG, PNG, GIF and WEBP image files are allowed.';
+                } else {
+                    $uploadDir = __DIR__ . '/assets/images/photos/';
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0755, true);
+                    }
+                    $fileName = uniqid('product_', true) . $allowedTypes[$fileType];
+                    $destination = $uploadDir . $fileName;
+
+                    if (!move_uploaded_file($_FILES['image_file']['tmp_name'], $destination)) {
+                        $error = 'Failed to upload image file.';
+                    } else {
+                        $imagePath = 'assets/images/photos/' . $fileName;
+                    }
+                }
+            }
+
+            if ($error === '' && ($name === '' || $price <= 0 || $imagePath === '' || $stock < 0)) {
+                $error = 'Please fill in all fields correctly.';
+            }
+
+            if ($error === '') {
                 $stmt = $conn->prepare('INSERT INTO products (name, price, image, stock) VALUES (?, ?, ?, ?)');
-                $stmt->bind_param('sdsi', $name, $price, $image, $stock);
+                $stmt->bind_param('sdsi', $name, $price, $imagePath, $stock);
                 if ($stmt->execute()) {
                     $message = 'Product added successfully.';
+                    $stmt->close();
+                    header('Location: Admin.php?section=add');
+                    exit;
                 } else {
                     $error = 'Could not add product.';
+                    $stmt->close();
                 }
-                $stmt->close();
-                header('Location: Admin.php?section=add');
-                exit;
             }
         }
 
@@ -277,11 +310,11 @@ function validateAdminLogin() {
 
     <div id="add" class="admin-card" style="display:none;">
       <h2>Add Product</h2>
-      <form method="POST" onsubmit="return validateProductForm();">
+      <form method="POST" enctype="multipart/form-data" onsubmit="return validateProductForm();">
         <input type="hidden" name="action" value="add_product">
         <input type="text" name="name" id="product-name" placeholder="Product Name" required>
         <input type="number" step="0.01" name="price" id="product-price" placeholder="Price" required>
-        <input type="text" name="image" id="product-image" placeholder="Image path (assets/images/photos/item.jpg)" required>
+        <input type="file" name="image_file" id="product-image" accept="image/*" required>
         <input type="number" name="stock" id="product-stock" placeholder="Stock quantity" min="0" value="20" required>
         <button type="submit">Add Product</button>
       </form>
@@ -370,7 +403,7 @@ function showSection(id) {
 function validateProductForm() {
   const name = document.getElementById('product-name').value.trim();
   const price = parseFloat(document.getElementById('product-price').value);
-  const image = document.getElementById('product-image').value.trim();
+  const imageInput = document.getElementById('product-image');
 
   if (!name) {
     alert('Please enter a product name.');
@@ -380,8 +413,8 @@ function validateProductForm() {
     alert('Please enter a valid price greater than 0.');
     return false;
   }
-  if (!image) {
-    alert('Please enter an image path.');
+  if (!imageInput.files || imageInput.files.length === 0) {
+    alert('Please select an image file.');
     return false;
   }
   return true;

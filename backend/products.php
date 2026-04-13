@@ -2,6 +2,11 @@
 header('Content-Type: application/json');
 include 'db.php';
 
+if (!$conn) {
+    echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . ($connection_error ?? 'Unknown error'), 'products' => []]);
+    exit;
+}
+
 $products = [];
 $result = $conn->query("SELECT id, name, price, image, IFNULL(stock, 0) AS stock FROM products ORDER BY id ASC");
 if ($result) {

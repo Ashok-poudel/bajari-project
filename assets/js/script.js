@@ -8,10 +8,15 @@ let products = [];
 async function fetchJson(url, options = {}) {
   try {
     const response = await fetch(url, options);
+    const text = await response.text();
     if (!response.ok) {
-      return { success: false, message: 'Network error' };
+      return { success: false, message: `Network error: ${response.status}`, raw: text };
     }
-    return await response.json();
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      return { success: false, message: `Invalid JSON response: ${parseError.message}`, raw: text };
+    }
   } catch (error) {
     return { success: false, message: error.message };
   }

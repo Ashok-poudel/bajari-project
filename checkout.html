@@ -18,6 +18,7 @@
   <button class="pay-btn khalti">Pay with Khalti</button>
   <button class="pay-btn esewa">Pay with eSewa</button>
   <button class="pay-btn card">Pay with Card</button>
+  <button class="pay-btn cash">Cash On Delivery</button>
 </div>
 
 <script src="assets/js/script.js"></script>
@@ -92,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.card').addEventListener('click', () => {
         alert('Card Payment Integration Coming Soon!');
     });
+});
+document.querySelector('.cash').addEventListener('click', async () => {
+    if (!confirm("Confirm Cash on Delivery order?")) return;
+    await placeOrder();
 });
 </script>
 

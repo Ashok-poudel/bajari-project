@@ -3,6 +3,11 @@ session_start();
 header('Content-Type: application/json');
 include 'db.php';
 
+if (!$conn) {
+    echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . ($connection_error ?? 'Unknown error')]);
+    exit;
+}
+
 $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : null;
 $session_id = session_id();
 $ownerClause = $user_id ? "user_id = $user_id" : "session_id = '" . $conn->real_escape_string($session_id) . "'";
